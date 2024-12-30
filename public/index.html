@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>동영상 목록 표시 & 재생</title>
+</head>
+<body>
+  <h1>동영상 목록</h1>
+  
+  <div id="videoListArea">
+    <!-- 목록이 여기에 표시될 예정 -->
+  </div>
+
+  <br/>
+
+  <video id="videoPlayer" width="640" height="360" controls>
+    지원되지 않는 브라우저입니다.
+  </video>
+
+  <script>
+    // (1) 페이지가 로드되면 /videos API를 통해 파일 목록 가져오기
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const response = await fetch('/videos');  // ex) http://localhost:3000/videos
+        const data = await response.json();
+        if (data.success) {
+          renderVideoList(data.files); // ["1672398572842.mp4", ...] 형태라고 가정
+        } else {
+          console.error("Failed to load video list");
+        }
+      } catch (error) {
+        console.error("Error fetching video list:", error);
+      }
+    });
+
+    // (2) 목록 렌더링 함수
+    function renderVideoList(files) {
+      const videoListArea = document.getElementById('videoListArea');
+      if (!files || files.length === 0) {
+        videoListArea.textContent = "업로드된 동영상이 없습니다.";
+        return;
+      }
+
+      // <ul> 형태로 목록 표시
+      const ul = document.createElement('ul');
+      files.forEach(fileName => {
+        const li = document.createElement('li');
+        // 파일명을 클릭할 수 있게 <a> 링크로 만들거나, 클릭 이벤트를 걸 수도 있음
+        const link = document.createElement('a');
+        link.href = "#";  // 클릭 시 페이지 이동은 없도록
+        link.textContent = fileName;
+
+        // 클릭 시 videoPlayer에 재생 경로를 지정
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          playVideo(fileName);
+        });
+
+        li.appendChild(link);
+        ul.appendChild(li);
+      });
+
+      videoListArea.appendChild(ul);
+    }
+
+    // (3) 선택된 파일을 <video> 태그로 재생
+    function playVideo(fileName) {
+      // 백엔드에서 "app.use('/processed', express.static(...))" 설정을 해서
+      // /processed/... URL로 직접 접근할 수 있다고 가정
+      // fileName: "1672398572842.mp4"
+      const videoURL = `D:/working/project/mywork/temp_media/processed/${fileName}`;
+
+      const videoPlayer = document.getElementById('videoPlayer');
+      videoPlayer.src = videoURL;
+      videoPlayer.play();
+    }
+  </script>
+</body>
+</html>
